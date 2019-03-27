@@ -1,0 +1,129 @@
+#include<cstdio>
+#include<cmath>
+#include<cstring>
+#include<queue>
+#include<algorithm>
+#include<iostream>
+#define N 10000
+using namespace std;
+int sign[10][6]=
+{
+    1,0,0,0,0,0,
+    1,1,0,0,0,0,
+    1,1,1,0,0,0,
+    1,1,1,1,0,0,
+    1,1,1,1,1,0,
+    1,1,1,1,1,1,
+    1,0,0,0,0,1,
+    1,1,0,0,0,1,
+    1,1,1,0,0,1,
+    1,1,1,1,0,1
+};
+struct data
+{
+       int num[6],st,sta,pos;
+};
+int vi[6][6][6][6][6][6][6][10];
+int com[N][8];
+char si[7],di[7];
+int a[6],b[6];
+int cnt;
+int check(data & t)
+{
+    return vi[t.num[0]][t.num[1]][t.num[2]][t.num[3]][t.num[4]][t.num[5]][t.pos][t.sta];
+}
+void gao(data & t)
+{
+    vi[t.num[0]][t.num[1]][t.num[2]][t.num[3]][t.num[4]][t.num[5]][t.pos][t.sta]=1;
+}
+void bfs()
+{
+     cnt=0;
+    // memset(vi,0,sizeof(vi));
+     queue<data>q;
+     data s,t;
+     for(int i=0;i<6;i++)
+     s.num[i]=i;
+     s.st=s.sta=s.pos=0;
+     q.push(s);
+     vi[0][1][2][3][4][5][0][0]=1;
+     while(!q.empty())
+     {
+                      s=q.front();
+                      q.pop();
+                      for(int i=0;i<6;i++)
+                      com[cnt][i]=s.num[i];
+                      com[cnt][6]=s.sta;
+                      com[cnt++][7]=s.st;
+                      t=s;
+                      t.st++;
+                      if(t.pos>0)
+                      {
+                                 swap(t.num[0],t.num[t.pos]);
+                                 if(!check(t))
+                                 {
+                                              gao(t);
+                                              q.push(t);
+                                 }
+                                 swap(t.num[0],t.num[t.pos]);
+                      }
+                      if(t.pos<5)
+                      {
+                                 int tmp=t.sta;
+                                 t.pos++;
+                                 if(t.pos>t.sta||(t.sta>5&&t.pos>t.sta-6))
+                                 {
+                                                                         if(t.sta==9)
+                                                                         t.sta=5;
+                                                                         else
+                                                                         t.sta++;
+                                 }
+                                 if(!check(t))
+                                 {
+                                               gao(t);
+                                               q.push(t);
+                                 }
+                                 t.sta=tmp;
+                                 t.pos--;
+                                 swap(t.num[5],t.num[t.pos]);
+                                 if(t.sta<5)
+                                 {
+                                 t.sta+=6;
+                                 if(t.sta>9)
+                                 t.sta=5;
+                                 }
+                                 if(!check(t))
+                                  {
+                                               gao(t);
+                                               q.push(t);
+                                  }
+                      }
+     }
+}
+int main()
+{
+    bfs();
+    while(~scanf("%s%s",si,di))
+    {
+                               for(int i=0;i<6;i++)
+                               {
+                                       a[i]=si[i]-'0';
+                                       b[i]=di[i]-'0';
+                               }
+                               int ans=9999999;
+                               for(int i=0;i<cnt;i++)
+                               {
+                                       int st=com[i][7],j;
+                                       for(j=0;j<6;j++)
+                                       {
+                                               if(a[com[i][j]]!=b[j]&&sign[com[i][6]][j]==0)
+                                               break;
+                                               st+=abs(a[com[i][j]]-b[j]);
+                                       }
+                                       if(j==6&&st<ans)
+                                                       ans=st;
+                               }
+                               printf("%d\n",ans);
+    }
+    return 0;
+}

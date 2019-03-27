@@ -1,0 +1,200 @@
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<cmath>
+#include<string>
+#include<map>
+#include<queue>
+using namespace std;
+
+struct node
+{
+    int state;
+    int pos;
+    int num[6];
+    int step;
+    int fangwen[6];
+};
+
+int vis_state[10][6] =
+{
+    1,0,0,0,0,0,  /*访问状态0: 初始状态(pos=0)*/
+    1,1,0,0,0,0,  /*访问状态1: 状态0通过右移操作得到(pos=1)，或者状态1通过swap0操作得到(pos=1)*/
+    1,1,1,0,0,0,  /*访问状态2: 状态1通过右移操作得到(pos=2)，或者状态2通过swap0操作得到(pos=2)*/
+    1,1,1,1,0,0,  /*访问状态3: 状态2通过右移操作得到(pos=3)，或者状态3通过swap0操作得到(pos=3)*/
+    1,1,1,1,1,0,  /*访问状态4: 状态3通过右移操作得到(pos=4)，或者状态4通过swap0操作得到(pos=4)*/
+    1,0,0,0,0,1,  /*访问状态5: 状态0通过swap1操作得到(pos=0)，或者状态5通过swap0操作得到(pos=0)*/
+    1,1,0,0,0,1,  /*访问状态6: 状态1通过swap1操作得到(pos=1)，或者状态5通过右移操作得到(pos=1),或者状态6通过swap0操作得到(pos=1)*/
+    1,1,1,0,0,1,  /*访问状态7: 状态2通过swap1操作得到(pos=2)，或者状态6通过右移操作得到(pos=2),或者状态7通过swap0操作得到(pos=2)*/
+    1,1,1,1,0,1,  /*访问状态8: 状态3通过swap1操作得到(pos=3)，或者状态7通过右移操作得到(pos=3),或者状态8通过swap0操作得到(pos=3)*/
+    1,1,1,1,1,1   /*访问状态9: 状态4通过swap1操作得到(pos=4)，或者状态8通过右移操作得到(pos=4),或者状态9通过右移操作得到(pos=5),
+                               或者状态4通过右移操作得到(pos=5)，或者状态9通过swap0操作得到，或者状态9通过swap1操作得到*/
+};
+
+int state[10000][8]; //对应的是所有情况，第二维记录相应信息
+
+int idx;
+int co;
+
+bool vis[6][6][6][6][6][6][6][10];  //前6个是数字，为什么只到6，是因为这个是做排列用的
+                                    //第7个是光标所在位置用的，第8个事state
+
+void put_to_vis(node a)
+{
+    vis[a.num[0]][a.num[1]][a.num[2]][a.num[3]][a.num[4]][a.num[5]][a.pos][a.state] = true;
+}
+
+bool check(node a)
+{
+    return vis[a.num[0]][a.num[1]][a.num[2]][a.num[3]][a.num[4]][a.num[5]][a.pos][a.state];
+}
+
+int find_state(node a)
+{
+    if(a.fangwen[5]==0)
+    {
+        int cnt = 0;
+        for(int i=1;i<5;i++)
+            if(a.fangwen[i])
+                cnt++;
+        return cnt;
+    }
+    else
+    {
+        int cnt = 0;
+        for(int i=1;i<5;i++)
+            if(a.fangwen[i])
+                cnt++;
+        return cnt+5;
+    }
+}
+
+
+
+void bfs()
+{
+    queue<node> Q;
+    node a,b;
+    idx=0;
+    co=0;
+    for(int i=0;i<6;i++)
+    {
+        a.num[i] = i;
+        a.fangwen[i] = 0;
+    }
+
+    a.pos = a.state = a.step = 0;
+    a.fangwen[0] = 1;
+    Q.push(a);
+    put_to_vis(a);
+
+    //printf("a step %d\n",a.step);
+    int co2=0;
+
+    while(!Q.empty())
+    {
+        co++;
+        a = Q.front();
+        Q.pop();
+
+        for(int i=0;i<6;i++)
+            state[idx][i] = a.num[i];
+        state[idx][6] = a.state;
+        state[idx][7] = a.step;
+        idx++;
+
+        if(a.pos>0) //左移或者左交换操作
+        {
+            //左移操作
+            b=a;
+            b.step = a.step+1;
+            b.pos--;
+            if(!check(b))
+            {
+                put_to_vis(b);
+                Q.push(b);
+            }
+
+            //左交换
+            b = a;
+            b.step = a.step+1;
+            swap(b.num[0],b.num[b.pos]);
+            if(!check(b))
+            {
+                put_to_vis(b);
+                Q.push(b);
+            }
+        }
+
+        if(a.pos<5) //右移和右交换操作
+        {
+            //右移
+            b=a;
+            b.step = a.step+1;
+            b.pos++;
+            b.fangwen[b.pos] = 1;
+            b.state = find_state(b);
+            if(!check(b))
+            {
+                put_to_vis(b);
+                Q.push(b);
+            }
+
+            //右交换
+            b = a ;
+            b.step = a.step+1;
+            swap(b.num[5],b.num[b.pos]);
+            b.fangwen[5] = 1;
+            b.state = find_state(b);
+            if(!check(b))
+            {
+                put_to_vis(b);
+                Q.push(b);
+            }
+        }
+    }
+}
+
+int main()
+{
+    memset(vis,false,sizeof(vis));
+    bfs();
+    char st[10] = "123456";
+    char ed[10] = "654321";
+    int _st[6];
+    int _ed[6];
+      for(int i=0;i<6;i++)
+        {
+            _st[i] = st[i]-'0';
+            _ed[i] = ed[i]-'0';
+        }
+
+
+        int ans = 99999999;
+ 		printf("%d\n",idx);
+        for(int i=0;i<idx;i++)
+        {
+            int tmp = state[i][7];//初始化为进行了交换后的步数
+            bool flag = true;
+            int j;
+            for(j=0;j<6;j++)
+            {
+                if(!vis_state[state[i][6]][j] && (_st[state[i][j]]!=_ed[j])  )
+                {
+                    flag = false;
+                    break;
+                }
+                else
+                {
+                    tmp += abs( _st[state[i][j]] - _ed[j]); //再加上每位进行加减 操作的步数
+                }
+            }
+
+            if(flag)
+                ans = min(ans,tmp);
+
+        }
+        printf("%d\n",ans);
+    return 0;
+}

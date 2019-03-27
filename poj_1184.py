@@ -9,17 +9,19 @@ sign=[[1,0,0,0,0,0],[1,1,0,0,0,0],[1,1,1,0,0,0],[1,1,1,1,0,0],[1,1,1,1,1,0],[1,1
 class Data():
     def __init__(self):
         self.num = [0,0,0,0,0,0]
-        self.st = 1
-        self.sta = 1
-        self.pos = 1
+        self.st = 0
+        self.sta = 0
+        self.pos = 0
 
-vi = [[[[[[[ 0 for i in range(10)]for i in range(6)]for i in range(6)]for i in range(6)]for i in range(6)] for i in range(6) ] for j in range(6)]
-com = [[]]
+vi = [[[[[[[ [ 0 for i in range(10)] for i in range(6)]for i in range(6)]for i in range(6)]for i in range(6)]for i in range(6)] for i in range(6) ] for j in range(6)]
+com = [[ 0 for i in range(8)] for i in range(10000)]
 si  = [0,0,0,0,0,0,0]
 di  = [0,0,0,0,0,0,0]
 a = [0,0,0,0,0,0]
 b = [0,0,0,0,0,0]
 cnt = 0
+
+
 
 def check(t):
     return vi[t.num[0]][t.num[1]][t.num[2]][t.num[3]][t.num[4]][t.num[5]][t.pos][t.sta];
@@ -28,6 +30,7 @@ def gao(t):
 
 
 def bfs():
+    global cnt
     cnt = 0
     q = Queue()
     s = Data()
@@ -37,22 +40,25 @@ def bfs():
     s.st = s.sta = s.pos = 0
     q.put(s)
     vi[0][1][2][3][4][5][0][0] = 1;
-    q.empty()
     while not q.empty():
         s = q.get()
         for i in range(6):
             com[cnt][i] = s.num[i]
         com[cnt][6] = s.sta
-        cnt += 1
         com[cnt][7] = s.st
+        cnt += 1
         t = s
         t.st += 1
         if t.pos > 0:
-            t.num[0], t.num[t.pos] = t.num[t.pos], t.num[0]
-            if not check(t):
+            kk = t.num[0]
+            t.num[0] = t.num[t.pos]
+            t.num[t.pos] = kk
+            if  check(t) == 0:
                 gao(t)
                 q.put(t)
-            t.num[0], t.num[t.pos] = t.num[t.pos],t.num[0]
+            kk = t.num[0]
+            t.num[0] = t.num[t.pos]
+            t.num[t.pos] = kk
         if t.pos < 5 :
             tmp = t.sta
             t.pos += 1
@@ -61,17 +67,19 @@ def bfs():
                     t.sta = 5
                 else:
                     t.sta += 1
-            if not check(t):
+            if  check(t) == 0:
                 gao(t)
                 q.put(t)
             t.sta = tmp
             t.pos -= 1
-            t.num[5], t.num[t.pos] =  t.num[t.pos],t.num[5]
+            kk = t.num[5]
+            t.num[5] = t.num[t.pos]
+            t.num[t.pos] = kk
             if t.sta < 5:
                 t.sta += 6
-            if t.sta > 9:
-                t.sta=5
-            if not check(t):
+                if t.sta > 9:
+                    t.sta=5
+            if check(t) == 0:
                 gao(t)
                 q.put(t)
 
@@ -80,19 +88,23 @@ def main():
     si = "123456"
     di = "654321"
     for i in range(6):
-        a[i] = si[i] - '0';
-        b[i] = di[i] - '0';
+        a[i] = ord(si[i])-ord('0');
+        b[i] = ord(di[i])-ord('0');
+    print(a,b)
     ans = 9999999;
+    print(cnt)
     for i in range(cnt):
         st = com[i][7]
-        j = 0
+        flag = True
         for j in range(6):
             if a[com[i][j]] != b[j] and sign[com[i][6]][j] == 0 :
+                flag = False
                 break;
-        st += abs(a[com[i][j]] - b[j]);
-        if j == 6 and st < ans :
+            tt = abs(a[com[i][j]] - b[j])
+            st = st + tt
+        if  flag and st < ans :
             ans=st;
     print(ans);
 
 if __name__ == '__main__':
-    main()
+   main()
